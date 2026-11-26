@@ -32,4 +32,4 @@ Keyword matching can miss indirect frustration or misread context. Replies are f
 ChatGPT assisted with code drafting, report wording and illustrative diagrams. The project owner checked the interaction scenarios and should verify source details, references, final code and repository commit before submission. The prototype itself does not call an AI model.
 
 ## Additional files
-The project report and diagrams are provided in the accompanying submission ZIP. The public repository is https://github.com/jankivala/ToneChatbot. Add the exact submitted commit hash or release tag to the report and submission record.
+The project report and diagrams are provided in the accompanying submission ZIP. The public repository is https://github.com/jankivala/Attune.git. Add the exact submitted commit hash or release tag to the report and submission record.
