@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Adaptive Social Presence Chatbot — Prototype</title>
+<style>
+:root{--ink:#18212f;--muted:#64748b;--line:#dbe2ea;--bg:#f4f7fb;--blue:#315b8a;--user:#e7f0ff;--bot:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:1040px;margin:12px auto;padding:0 14px}.layout{display:grid;grid-template-columns:270px minmax(0,1fr);gap:12px;align-items:stretch}
+.panel,.chat{background:white;border:1px solid var(--line);border-radius:13px;padding:14px;box-shadow:0 3px 14px #18212f0a}
+h1{font-size:1.35rem;margin:0 0 3px}h2{font-size:.96rem;margin:0 0 7px}.muted{color:var(--muted);font-size:.82rem;margin:5px 0}
+label{display:block;font-weight:650;margin:9px 0 4px}select,textarea,button{font:inherit}select,textarea{width:100%;padding:8px;border:1px solid #b9c5d3;border-radius:8px;background:white}
+textarea{min-height:58px;resize:vertical}.btn{border:0;border-radius:8px;padding:8px 11px;background:var(--blue);color:white;font-weight:650;cursor:pointer}.secondary{background:#e8edf4;color:var(--ink)}.row{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}
+.chips button{background:#edf2f7;color:#25354a;border:1px solid var(--line);font-size:.82rem}
+.chat{min-height:0;display:flex;flex-direction:column}.messages{flex:1;display:flex;flex-direction:column;gap:9px;margin:9px 0;max-height:360px;overflow:auto}
+.msg{max-width:88%;padding:10px 12px;border-radius:11px;white-space:pre-wrap}.bot{background:var(--bot);border:1px solid var(--line);align-self:flex-start}.user{background:var(--user);align-self:flex-end}
+.meta{font-size:.72rem;color:var(--muted);margin-bottom:3px}.explain{border-left:3px solid #8ba6c4;padding:6px 8px;background:#f5f8fb;font-size:.8rem;margin-top:6px}
+.status{padding:7px 9px;background:#f1f5f9;border-radius:8px;font-size:.78rem;color:#334155}
+.status[hidden]{display:none}
+@media(min-width:761px){main{max-width:980px;margin:8px auto}.panel,.chat{padding:12px}.messages{max-height:300px;gap:7px}.msg{padding:8px 10px}.muted{margin:4px 0}.panel label{margin:7px 0 3px}}
+@media(min-width:761px){main>p{margin:2px 0 9px}.panel ul{padding-left:18px;margin:6px 0}.panel li{margin:2px 0}.panel hr{margin:10px 0!important}}
+@media(max-width:760px){.layout{grid-template-columns:1fr}.chat{min-height:420px}.messages{max-height:300px}}
+</style></head>
+<body><main>
+<h1>Adaptive Social Presence Chatbot</h1>
+<p class="muted">A research prototype exploring how conversational style should respond to context. No real emotion model or language model is connected.</p>
+<div class="layout">
+<aside class="panel">
+<h2>Interaction controls</h2>
+<label for="mode">Communication style</label>
+<select id="mode"><option value="adaptive">Adaptive (recommended)</option><option value="low">Low social presence</option><option value="medium">Moderate social presence</option><option value="high">High social presence</option></select>
+<p class="muted">Adaptive mode starts at moderate social presence. If your message contains explicit frustration cues, it switches to a calmer, more direct style. This is a transparent keyword demonstration, not reliable emotion detection.</p>
+<label for="context">Context for adaptive demonstration</label>
+<select id="context"><option value="neutral">Neutral / routine</option><option value="frustrated">Frustrated / upset</option></select>
+<p class="muted">This control lets you test the rule without having to disclose personal information.</p>
+<label>Try an example</label>
+<div class="row chips">
+<button class="btn" onclick="example('Can you explain how this works?')">Neutral question</button>
+<button class="btn" onclick="example('I have asked three times and this is really frustrating.')">Frustrated user</button>
+</div>
+<label for="input">Your message</label>
+<textarea id="input" placeholder="Type a message (fictional examples recommended)"></textarea>
+<div class="row"><button class="btn" onclick="send()">Send message</button><button class="btn secondary" onclick="resetChat()">Reset</button></div>
+<div class="row"><button class="btn secondary" onclick="requestHuman()">Request a human adviser</button></div>
+<p class="muted">Handoff is simulated for this prototype; no adviser is contacted.</p>
+<hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+<h2>What the prototype does</h2>
+<ul class="muted"><li>Compares three fixed social-presence levels.</li><li>Adaptive rule selects a restrained style for explicit frustration cues.</li><li>Shows the selected style and reason.</li><li>Lets the user override the style at any time.</li></ul>
+<div class="status">Scope: local front-end simulation; no persistent memory, account, external data, or human participant study.</div>
+</aside>
+<section class="chat">
+<h2>Conversation</h2><div class="messages" id="messages">
+<div class="msg bot"><div class="meta">Assistant · Prototype introduction</div>Hello. I can demonstrate different communication styles. Choose a style or leave Adaptive selected. My style choice is a simple rule-based demonstration, not a diagnosis of your emotions.</div>
+</div>
+<div><div class="meta" id="selection">Current style: moderate · Reason: default adaptive setting</div>
+<textarea id="reply" placeholder="Assistant response appears here" readonly style="min-height:66px"></textarea>
+<div id="handoff" class="status" role="status" aria-live="polite" hidden></div></div>
+</section></div></main>
+<script>
+const frustration = ['frustrat','angry','annoy','upset','furious','ridiculous','third time','again and again','fed up','waste of time','not listening'];
+function add(text,who,extra=''){const box=document.createElement('div');box.className='msg '+who;const m=document.createElement('div');m.className='meta';m.textContent=who==='user'?'You':'Assistant';box.append(m,document.createTextNode(text));if(extra){const e=document.createElement('div');e.className='explain';e.textContent=extra;box.append(e)}document.getElementById('messages').append(box);box.scrollIntoView({block:'end'});}
+function chooseStyle(text){const mode=document.getElementById('mode').value;const context=document.getElementById('context').value;const hit=frustration.some(w=>text.toLowerCase().includes(w));if(mode!=='adaptive')return {style:mode,reason:'Manually selected by the user'};if(context==='frustrated'||hit)return {style:'low',reason:hit?'Explicit frustration phrase matched by a simple keyword rule':'Frustrated context selected for demonstration'};return {style:'medium',reason:'No explicit frustration cue; use moderate social presence by default'};}
+function response(text,style){const base='I can help you work through that. What would be most useful to clarify first?';if(style==='low')return 'Understood. I will keep this direct. '+base+' I may not have enough context yet, so please correct me if I have misunderstood.';if(style==='high')return 'Oh no, I’m really sorry you’re dealing with this! I’m here with you and happy to help. '+base;return 'Thanks for explaining. '+base;}
+function send(){const t=document.getElementById('input').value.trim();if(!t)return;document.getElementById('handoff').hidden=true;add(t,'user');const d=chooseStyle(t);const r=response(t,d.style);add(r,'bot','Style selected: '+d.style+'. Why: '+d.reason+'. You can change the style using the control panel.');document.getElementById('reply').value=r;document.getElementById('selection').textContent='Current style: '+d.style+' · Reason: '+d.reason;document.getElementById('input').value='';}
+function requestHuman(){const box=document.getElementById('handoff');box.hidden=false;box.textContent='Connecting you to a human adviser… This is a simulated handoff for demonstration only; no real person is being contacted.';add('I would like to speak to a human adviser.','user');add('I can show the handoff state, but this prototype cannot connect you to a real adviser.','bot','Handoff requested by the user. No external service is contacted.');}
+function example(t){document.getElementById('input').value=t;if(t.toLowerCase().includes('frustrating'))document.getElementById('context').value='frustrated';else document.getElementById('context').value='neutral';}
+function resetChat(){document.getElementById('messages').innerHTML='';document.getElementById('reply').value='';document.getElementById('handoff').hidden=true;document.getElementById('selection').textContent='Current style: moderate · Reason: default adaptive setting';}
+</script></body></html>
